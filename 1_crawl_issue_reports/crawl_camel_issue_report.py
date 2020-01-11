@@ -9,7 +9,8 @@ from lxml import etree
 def main(ticket):
     print('Beginning data extraction for issue report {}...'.format(ticket))
     try:
-        base_tree = get_html_tree(ticket)
+        raw_document = get_raw_document(ticket)
+        base_tree = parse_html_tree(raw_document)
         print('Extracting issue details from HTML tree...')
         all_issue_details = parse_all_issue_details(base_tree)
         write_issue_to_csv(ticket, all_issue_details)
@@ -18,14 +19,25 @@ def main(ticket):
         print('ERROR: Failed to complete crawl for {} - error={}'.format(ticket, e))
 
 
-def get_html_tree(ticket):
+def get_raw_document(ticket):
     url = 'https://issues.apache.org/jira/browse/{}'.format(ticket)
     print("Downloading issue report from {}".format(url))
     try:
-        response = requests.get(url)
-        return lhtml.fromstring(response.content)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36"
+        }
+        response = requests.get(url, headers)
+        return response.content
     except Exception as e:
         raise Exception('Request error: {}'.format(e))
+
+
+def parse_html_tree(raw_docuemnt):
+    print("Parsing Document Tree...")
+    try:
+        return lhtml.fromstring(raw_docuemnt)
+    except Exception as e:
+        raise Exception('Document parsing error: {}'.format(e))
 
 
 def parse_all_issue_details(base_tree):
@@ -33,13 +45,14 @@ def parse_all_issue_details(base_tree):
     people_details = scrape_people_details(base_tree)
     dates_details = scrape_dates_details(base_tree)
     description_details = scrape_description_details(base_tree)
-    # comment_details = scrape_comment_details(base_tree)
+    comment_details = scrape_comment_details(base_tree)
     issue_summary = scrape_issue_summary(base_tree)
     all_issue_details = dict()
     all_issue_details.update(issue_details)
     all_issue_details.update(people_details)
     all_issue_details.update(dates_details)
     all_issue_details.update(description_details)
+    all_issue_details.update(comment_details)
     all_issue_details.update(issue_summary)
     return all_issue_details
 
@@ -110,7 +123,7 @@ def scrape_description_details(base_tree):
     try:
         description_details = dict()
         description_container_el_list = base_tree.xpath('//*[@id="descriptionmodule"]')
-        if (len(description_container_el_list) == 0):
+        if len(description_container_el_list) == 0:
             return {
                 'Description': "NO DESCRIPTION"
             }
@@ -129,24 +142,38 @@ def scrape_description_details(base_tree):
 
 
 def scrape_comment_details(base_tree):
-    # TODO: Figure this out
     comment_details = dict()
-    activity_container_el = base_tree.xpath('//*[@id="activitymodule"]')[0]
-    print(activity_container_el)
-    print(etree.tostring(activity_container_el, pretty_print=False))
-
-    issue_actions_container_el = base_tree.xpath('//*[@id="issue_actions_container"]')
-    print(issue_actions_container_el)
-    test = base_tree.xpath('//*[@id="comment-15748543"]')
-    print(test)
-    
-    all_comments = activity_container_el.xpath('.//*[contains(@class, activity-comment)]')
-    print(all_comments)
-    for comment_el in all_comments:
-        verbose_comment_el = comment_el.xpath('.//*[contains(@class, verbose)]')[0]
-        comment_head = verbose_comment_el.xpath('.//*[contains(@class, action-head)]')
-        print(comment_head.text_content())
+    # NOTE: This function doesn't work. Just return en empty dict for now, and hopefully figure it out later
+    # comments_tree = build_correct_comments_html_tree(base_tree)
+    # all_comments = comments_tree.xpath('.//*[contains(@class, activity-comment)]')
+    # for comment_el in all_comments:
+    #     verbose_comment_el = comment_el.xpath('.//*[contains(@class, verbose)]')[0]
+    #     comment_head = verbose_comment_el.xpath('.//*[contains(@class, action-head)]')
+    #     print(comment_head.text_content())
     return comment_details
+
+
+def build_correct_comments_html_tree(base_tree):
+    '''
+    TODO: Get this function working
+    Since the html for the comments section is returned as a string in a variable in a 
+    script tag, the raw string has to be found in the javascript, decoded so that special
+    HTML characters are no longer encoded, and then passed into lxml to build the HTML tree.
+    Currently, I am not sure if I am correctly decoding the string so that it can be parsed
+    correctly. Additionally, all this code is commented out because it increases the 
+    execution time of the program
+    '''
+    # script = base_tree.xpath('//script[contains(., "activity-panel-pipe-id")]/text()')[0]
+    # search_string = '["activity-panel-pipe-id"]='
+    # start_index = script.index(search_string)
+    # comments_html = script[start_index + len(search_string):]
+    # end_index = comments_html.index('";')
+    # comments_html = comments_html[:end_index + 1]
+    # comments_html = comments_html.encode('utf-8').decode('unicode-escape')
+    # comments_tree = lhtml.fromstring(comments_html)
+    # print(etree.tostring(comments_tree, pretty_print=True))
+    # return comments_tree
+
 
 def scrape_issue_summary(base_tree):
     try:
@@ -165,6 +192,7 @@ def scrape_issue_summary(base_tree):
         return {
             'Summary': "ERROR: COULD NOT PARSE SUMMARY"
         }
+
 
 def get_cleaned_text(html_el):
     text = html_el.text_content().strip()  # Remove tab and newline characters
