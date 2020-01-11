@@ -41,6 +41,6 @@ python word_search.py -t
      - If the length of the word is 0, return `True`, as this means we have successfully found all letters in the word
 - If all these checks fail, we pop the first letter from the word, and check to see if the letter cell at the current row and column match. If not, return `False`.
 - If they match, mark the letter cell at the current row and column as visited, and create a new word of length - 1 of the current word with the first letter missing.
-- Call `recursive_search` on the cells above, below, to the left, and to the right of the curren row and column.
+- Call `recursive_search` on the cells above, below, to the left, and to the right of the current row and column.
 - If all of the `recursive_search` calls return `False`, mark the current cell as not visited, as this is now considered a dead-end path and we are no longer using it.
 - Return `True` if any of the `recursive_search` calls succeeded. Else, return `False`.
