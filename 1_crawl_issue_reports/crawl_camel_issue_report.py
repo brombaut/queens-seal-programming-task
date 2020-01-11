@@ -161,11 +161,11 @@ def write_issue_to_csv(ticket, details):
             values_string
         ]
         file_name = '{}.csv'.format(ticket)
-        file_path = ''
+        full_file_path = ''
         with open(file_name, 'w') as f: 
             f.write('\n'.join(lines))
-            file_path = os.path.realpath(f.name)
-        print('Issue report details for {} have been written to {}'.format(ticket, file_path))
+            full_file_path = os.path.realpath(f.name)
+        print('Issue report details for {} have been written to {}'.format(ticket, full_file_path))
     except Exception as e:
         raise Exception('Writing file error: {}'.format(e))
 
