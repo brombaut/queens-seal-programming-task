@@ -115,10 +115,10 @@ def scrape_comment_details(base_tree, headers):
 
 
 def get_cleaned_text(html_el):
-    text = html_el.text_content().strip()
+    text = html_el.text_content().strip()  # Remove tab and newline characters
     text = text.replace(':', '')
-    text = text.replace(',', ' ')
-    text = ' '.join(text.split())
+    text = text.replace(',', ' ')  # Replace comma with space, as the comma character is the delimiter in the csv file
+    text = ' '.join(text.split())  # Remove extra spaces
     return text
 
 
@@ -138,6 +138,7 @@ def write_issue_to_csv(ticket, details):
     ]
     with open('{}.csv'.format(ticket), 'w') as f: 
         f.write('\n'.join(lines))
+    print('Issue report details for {} have been written to {}.csv'.format(ticket, ticket))
 
 
 if __name__ == '__main__':
