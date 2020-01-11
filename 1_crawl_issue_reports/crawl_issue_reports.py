@@ -101,7 +101,12 @@ def get_epoch_from_date_string(date_string):
 def scrape_description_details(base_tree):
     try:
         description_details = dict()
-        description_container_el = base_tree.xpath('//*[@id="descriptionmodule"]')[0]
+        description_container_el_list = base_tree.xpath('//*[@id="descriptionmodule"]')
+        if (len(description_container_el_list) == 0):
+            return {
+                'Description': "NO DESCRIPTION"
+            }
+        description_container_el = description_container_el_list[0]
         description_name_el = description_container_el.xpath('.//*[@id="descriptionmodule_heading"]')[0]
         description_name = get_cleaned_text(description_name_el)
         descrption_value_el = description_container_el.xpath('.//*[@id="description-val"]')[0]
@@ -111,7 +116,7 @@ def scrape_description_details(base_tree):
     except Exception as e:
         print('Scrape description error: {}'.format(e))
         return {
-            'Description': "COULD NOT PARSE DESCRIPTION"
+            'Description': "ERROR: COULD NOT PARSE DESCRIPTION"
         }
 
 
