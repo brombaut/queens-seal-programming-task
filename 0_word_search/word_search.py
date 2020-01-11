@@ -72,6 +72,7 @@ def run_tests():
     test_exists()
     test_does_not_exist()
     test_visiting_letters()
+    # TODO: Add tests for empty word / empty board / mispatched board
     print('All tests pass')
 
 
