@@ -179,7 +179,7 @@ def scrape_issue_summary(base_tree):
     try:
         issue_summary = dict()
         summary_container_el_list = base_tree.xpath('//*[@id="summary-val"]')
-        if (len(summary_container_el_list) == 0):
+        if len(summary_container_el_list) == 0:
             return {
                 'Summary': "NO SUMMARY"
             }
