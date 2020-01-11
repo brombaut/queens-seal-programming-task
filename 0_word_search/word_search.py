@@ -56,9 +56,12 @@ def recursive_search(word, board, visited, curr_row, curr_col):
 
 
 def build_fresh_visited_board(board):
+    visited = list()
     num_of_rows = len(board)
-    num_of_cols = len(board[0])
-    return [[False for x in range(num_of_cols)] for y in range(num_of_rows)]
+    for row in range(num_of_rows):
+        cols = [False for x in range(len(board[row]))]
+        visited.append(cols)
+    return visited
 
 
 def indexes_are_invalid(board, x, y):
@@ -175,8 +178,16 @@ def test_mismatched_columns():
         ['A', 'D', 'E', 'E'],
     ]
 
+    word3 = 'ZEJE'
+    board3 = [
+        ['A', 'B', 'C', 'E'],
+        ['S', 'F', 'C', 'E', 'Z'],
+        ['A', 'D', 'E', 'J'],
+    ]
+
     assert word_search(word1, board1), 'test_mismatched_columns failed: {}'.format(word1)
     assert word_search(word2, board2), 'test_mismatched_columns failed: {}'.format(word2)
+    assert word_search(word3, board3), 'test_mismatched_columns failed: {}'.format(word3)
 
 
 def test_no_word():
