@@ -3,6 +3,7 @@ import lxml.html as lhtml
 import datetime
 import os
 import sys
+from lxml import etree
 
 
 def main(ticket):
@@ -10,16 +11,7 @@ def main(ticket):
     try:
         base_tree = get_html_tree(ticket)
         print('Extracting issue details from HTML tree...')
-        issue_details = scrape_issue_details(base_tree)
-        people_details = scrape_people_details(base_tree)
-        dates_details = scrape_dates_details(base_tree)
-        description_details = scrape_description_details(base_tree)
-        # comment_details = scrape_comment_details(base_tree)
-        all_issue_details = dict()
-        all_issue_details.update(issue_details)
-        all_issue_details.update(people_details)
-        all_issue_details.update(dates_details)
-        all_issue_details.update(description_details)
+        all_issue_details = parse_all_issue_details(base_tree)
         write_issue_to_csv(ticket, all_issue_details)
         print('Sucess for {}'.format(ticket))
     except Exception as e:
@@ -34,6 +26,22 @@ def get_html_tree(ticket):
         return lhtml.fromstring(response.content)
     except Exception as e:
         raise Exception('Request error: {}'.format(e))
+
+
+def parse_all_issue_details(base_tree):
+    issue_details = scrape_issue_details(base_tree)
+    people_details = scrape_people_details(base_tree)
+    dates_details = scrape_dates_details(base_tree)
+    description_details = scrape_description_details(base_tree)
+    # comment_details = scrape_comment_details(base_tree)
+    issue_summary = scrape_issue_summary(base_tree)
+    all_issue_details = dict()
+    all_issue_details.update(issue_details)
+    all_issue_details.update(people_details)
+    all_issue_details.update(dates_details)
+    all_issue_details.update(description_details)
+    all_issue_details.update(issue_summary)
+    return all_issue_details
 
 
 def scrape_issue_details(base_tree):
@@ -125,6 +133,10 @@ def scrape_comment_details(base_tree):
     comment_details = dict()
     activity_container_el = base_tree.xpath('//*[@id="activitymodule"]')[0]
     print(activity_container_el)
+    print(etree.tostring(activity_container_el, pretty_print=False))
+
+    issue_actions_container_el = base_tree.xpath('//*[@id="issue_actions_container"]')
+    print(issue_actions_container_el)
     test = base_tree.xpath('//*[@id="comment-15748543"]')
     print(test)
     
@@ -136,6 +148,23 @@ def scrape_comment_details(base_tree):
         print(comment_head.text_content())
     return comment_details
 
+def scrape_issue_summary(base_tree):
+    try:
+        issue_summary = dict()
+        summary_container_el_list = base_tree.xpath('//*[@id="summary-val"]')
+        if (len(summary_container_el_list) == 0):
+            return {
+                'Summary': "NO SUMMARY"
+            }
+        summary_container_el = summary_container_el_list[0]
+        summary_value = get_cleaned_text(summary_container_el)
+        issue_summary['Summary'] = summary_value
+        return issue_summary
+    except Exception as e:
+        print('Scrape summary error: {}'.format(e))
+        return {
+            'Summary': "ERROR: COULD NOT PARSE SUMMARY"
+        }
 
 def get_cleaned_text(html_el):
     text = html_el.text_content().strip()  # Remove tab and newline characters
