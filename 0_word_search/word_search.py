@@ -17,6 +17,12 @@ def word_search(word, board):
     print("Word: {}".format(word))
     print("Board:")
     print_board(board)
+    if word is None or len(word) == 0:
+        print("Empty Word Exists\n")
+        return True
+    if not board:
+        print("Empty Board does not contain {}\n".format(word))
+        return False
     first_letter = word[0]
     for row_index, row in enumerate(board):
         for col_index, letter in enumerate(row):
@@ -29,25 +35,24 @@ def word_search(word, board):
 
 
 def recursive_search(word, board, visited, curr_row, curr_col):
+    if len(word) == 0:
+        return True
     if indexes_are_invalid(board, curr_row, curr_col):
         return False
     if visited[curr_row][curr_col]:
         return False
-    if len(word) == 0:
-        return True
-    else:
-        curr_letter = word[0]
-        if board[curr_row][curr_col] != curr_letter:
-            return False
-        visited[curr_row][curr_col] = True
-        rest_of_word = word[1:]
-        found = recursive_search(rest_of_word, board, visited, curr_row - 1, curr_col)\
-            or recursive_search(rest_of_word, board, visited, curr_row + 1, curr_col)\
-            or recursive_search(rest_of_word, board, visited, curr_row, curr_col - 1)\
-            or recursive_search(rest_of_word, board, visited, curr_row, curr_col + 1)
-        if not found:
-            visited[curr_row][curr_col] = False
-        return found
+    curr_letter = word[0]
+    if board[curr_row][curr_col] != curr_letter:
+        return False
+    visited[curr_row][curr_col] = True
+    rest_of_word = word[1:]
+    found = recursive_search(rest_of_word, board, visited, curr_row - 1, curr_col)\
+        or recursive_search(rest_of_word, board, visited, curr_row + 1, curr_col)\
+        or recursive_search(rest_of_word, board, visited, curr_row, curr_col - 1)\
+        or recursive_search(rest_of_word, board, visited, curr_row, curr_col + 1)
+    if not found:
+        visited[curr_row][curr_col] = False
+    return found
 
 
 def build_fresh_visited_board(board):
@@ -61,6 +66,9 @@ def indexes_are_invalid(board, x, y):
 
 
 def print_board(board):
+    if not board:
+        print('[]')
+        return
     for row in board:
         row_string = ""
         for letter in row:
@@ -72,7 +80,10 @@ def run_tests():
     test_exists()
     test_does_not_exist()
     test_visiting_letters()
-    # TODO: Add tests for empty word / empty board / mispatched board
+    test_single_row_col()
+    test_mismatched_columns()
+    test_no_word()
+    test_empty_board()
     print('All tests pass')
 
 
@@ -121,6 +132,77 @@ def test_visiting_letters():
         ['A', 'D', 'E', 'E'],
     ]
     assert not word_search(word3, board2), 'test_visiting_letters failed: {}'.format(word3)
+
+def test_single_row_col():
+    print('Testing Single Row/Col Combinations')
+    word1 = 'A'
+    board1 = [
+        ['A'],
+    ]
+
+    word2 = 'AAASA'
+    board2 = [
+        ['A'],
+        ['S'],
+        ['A'],
+        ['A'],
+        ['A'],
+    ]
+
+    word3 = 'AAASA'
+    board3 = [
+        ['A', 'S', 'A', 'A', 'A'],
+    ]
+    
+    assert word_search(word1, board1), 'test_single_row_col failed: {}'.format(word1)
+    assert word_search(word2, board2), 'test_single_row_col failed: {}'.format(word2)
+    assert word_search(word3, board3), 'test_single_row_col failed: {}'.format(word3)
+
+
+def test_mismatched_columns():
+    print('Testing Mismatched Columns...')
+    word1 = 'EECCE'
+    board1 = [
+        ['A', 'B', 'C', 'E'],
+        ['S', 'F', 'C'],
+        ['A', 'D', 'E', 'E'],
+    ]
+
+    word2 = 'EDASABCE'
+    board2 = [
+        ['A', 'B', 'C', 'E'],
+        ['S'],
+        ['A', 'D', 'E', 'E'],
+    ]
+
+    assert word_search(word1, board1), 'test_mismatched_columns failed: {}'.format(word1)
+    assert word_search(word2, board2), 'test_mismatched_columns failed: {}'.format(word2)
+
+
+def test_no_word():
+    print('Testing No Word...')
+    word1 = ''
+    word2 = None
+    board = [
+        ['A', 'B', 'C', 'E'],
+        ['S', 'F', 'C', 'S'],
+        ['A', 'D', 'E', 'E'],
+    ]
+    assert word_search(word1, board), 'test_no_word failed: {}'.format(word1)
+    assert word_search(word2, board), 'test_no_word failed: {}'.format(word2)
+
+
+def test_empty_board():
+    print('Testing No Board...')
+    word1 = 'a'
+    board1 = None
+    board2 = []
+    board3 = [
+        [],
+    ]
+    assert not word_search(word1, board1), 'test_empty_board failed: {}'.format(word1)
+    assert not word_search(word1, board2), 'test_empty_board failed: {}'.format(word1)
+    assert not word_search(word1, board3), 'test_empty_board failed: {}'.format(word1)
 
 
 if __name__ == '__main__':
